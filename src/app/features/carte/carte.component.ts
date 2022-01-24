@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { GenetiqueService } from 'src/app/core/service/genetique-service';
 import { Carte } from 'src/app/shared/carte/carte';
 import { Tile } from 'src/app/shared/carte/tile';
 import { TileType } from 'src/app/shared/carte/tile-type';
@@ -10,15 +11,16 @@ import { TileType } from 'src/app/shared/carte/tile-type';
 })
 export class CarteComponent implements OnInit {
 
-  generation: number = 1;
   tileSize: number = 16;
   canvas: any
   ctx: any
   carte: Carte
 
-  constructor() { 
+  constructor(private genetiqueService: GenetiqueService) { 
     this.carte = this.loadCarte();
   }
+
+  numeroGeneration(): number { return this.genetiqueService.generation; }
 
   loadCarte(): Carte {
     let carte: Array<string> = [
@@ -56,6 +58,10 @@ export class CarteComponent implements OnInit {
       this.ctx = this.canvas.getContext("2d");
     }
     this.drawCarte();
+  }
+
+  onNext(): void {
+    this.genetiqueService.updatePopulation();
   }
 
   drawCarte(): void {
