@@ -17,13 +17,14 @@ import { Population } from "src/app/shared/genetique/population";
 export class GenetiqueService {
     generation: number = 1;
     taillePopulation: number = 100;
-    tailleGenome: number = 20;
+    tailleGenome: number = 40;
     tauxCroisement: number = 20;
     tauxMutation: number = 5;
     carte: Carte;
     population: Population;
     croisement: Croisement = new CroitementMoitie();
     mutation: Mutation = new MutationRandom();
+
     constructor() {
         this.carte = this.loadCarte();
         this.population = this.initPopulation();
@@ -37,6 +38,13 @@ export class GenetiqueService {
         }
 
         return new Population(genomes);
+    }
+
+    getBest(): Genome {
+        this.population.genomes.sort((a, b) => {
+            return Evaluation.evaluate(a, this.carte) - Evaluation.evaluate(b, this.carte); 
+        });
+        return this.population.genomes[0];
     }
 
     private nextGeneration(): Population {

@@ -9,9 +9,11 @@ export class Evaluation {
         return carte.grid[coord[0]][coord[1]].type === TileType.Mur
     }
 
-    private static coordonneeFinale(genome: Genome, carte: Carte): [number, number] {
+    static coordonneeFinale(genome: Genome, carte: Carte): [number, number] {
         let position: [number, number] = carte.positionDepart();
+        let last: [number, number] = [position[0], position[1]];
         for (let i = 0; i < genome.genes.length; i++) {
+            last = [position[0], position[1]];
             switch (genome.genes[i]) {
                 case Gene.Haut:
                     position[0] -= 1
@@ -28,10 +30,44 @@ export class Evaluation {
             }
 
             if (this.collideWithWall(position, carte)) {
-                return position;
+                console.log("collision");
+                return last;
             }
         }
-        return position;
+        return last;
+    }
+
+    static allCoord(genome: Genome, carte: Carte): Array<[number, number]> {
+        
+        let position: [number, number] = carte.positionDepart();
+        let last: [number, number] = [position[0], position[1]];
+
+        let res = new Array<[number, number]>();
+        res.push(last);
+
+        for (let i = 0; i < genome.genes.length; i++) {
+            last = [position[0], position[1]];
+            switch (genome.genes[i]) {
+                case Gene.Haut:
+                    position[0] -= 1
+                    break;
+                case Gene.Droite:
+                    position[1] += 1
+                    break;
+                case Gene.Bas:
+                    position[0] += 1
+                    break;
+                case Gene.Gauche:
+                    position[1] -= 1
+                    break;
+            }
+
+            if (this.collideWithWall(position, carte)) {
+                return res;
+            }
+            res.push(last);
+        }
+        return res;
     }
 
     /**

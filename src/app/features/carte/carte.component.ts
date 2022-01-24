@@ -3,6 +3,8 @@ import { GenetiqueService } from 'src/app/core/service/genetique-service';
 import { Carte } from 'src/app/shared/carte/carte';
 import { Tile } from 'src/app/shared/carte/tile';
 import { TileType } from 'src/app/shared/carte/tile-type';
+import { Evaluation } from 'src/app/shared/genetique/evaluation';
+import { Genome } from 'src/app/shared/genetique/genome';
 
 @Component({
   selector: 'app-carte',
@@ -11,46 +13,17 @@ import { TileType } from 'src/app/shared/carte/tile-type';
 })
 export class CarteComponent implements OnInit {
 
-  tileSize: number = 16;
   canvas: any
   ctx: any
-  carte: Carte
+
+  tileSize: number = 32
 
   constructor(private genetiqueService: GenetiqueService) { 
-    this.carte = this.loadCarte();
+    
   }
 
   numeroGeneration(): number { return this.genetiqueService.generation; }
 
-  loadCarte(): Carte {
-    let carte: Array<string> = [
-      "11111111111111111111",
-      "12000000000000000001",
-      "10000000000000000001",
-      "10001000000000000001",
-      "10001000000000000001",
-      "10000000000000000001",
-      "10000011100000000001",
-      "10000000000000000001",
-      "10000001111111100001",
-      "10000000000010000001",
-      "10000000000010000001",
-      "10000000000010000001",
-      "10000000000010000001",
-      "10000000000000000031",
-      "11111111111111111111",
-    ];
-
-    let carteMap: Array<Array<Tile>> = carte
-      .map(ligne => Array.from(ligne).map(element => {
-        if (element === '1') return {type: TileType.Mur}
-        else if (element === '2') return {type: TileType.Depart}
-        else if (element === '3') return {type: TileType.Arrive}
-        else return {type: TileType.Chemin}
-      }));
-
-    return new Carte(carteMap);
-  }
 
   ngOnInit(): void {
     this.canvas = document.getElementById("carte");
@@ -62,28 +35,61 @@ export class CarteComponent implements OnInit {
 
   onNext(): void {
     this.genetiqueService.updatePopulation();
+    this.clean();
+    this.drawCarte();
+  }
+
+  onNext10(): void {
+    for (let i = 0; i < 10; i++) this.genetiqueService.updatePopulation();
+    this.clean();
+    this.drawCarte();
+  }
+
+  clean(): void {
+    this.ctx.clearRect(0, 0, 800, 600);
+  }
+
+
+  drawChemin(): void {
+    const best: Genome = this.genetiqueService.getBest();
+    const coords: Array<[number, number]> = Evaluation.allCoord(best, this.genetiqueService.carte);
+    this.ctx.fillStyle = "#00FFFF";
+
+    for (let i = 0; i < coords.length - 1; i++) {
+      const p1: [number, number] = coords[i];
+      const p2: [number, number] = coords[i + 1];
+      
+      this.ctx.beginPath();
+
+      this.ctx.moveTo(p1[1] * this.tileSize + this.tileSize / 2, p1[0] * this.tileSize + this.tileSize / 2);
+      this.ctx.lineTo(p2[1] * this.tileSize + this.tileSize / 2, p2[0] * this.tileSize + this.tileSize / 2);
+
+      this.ctx.stroke();
+    }
   }
 
   drawCarte(): void {
+
     if (this.ctx) {
-      
-      for (let l = 0; l < this.carte.grid.length; l++) {
-        for (let c = 0; c < this.carte.grid[l].length; c++) {
-          let current: Tile = this.carte.grid[l][c];
+      const carte = this.genetiqueService.carte;
+      const tileSize = 32;
+      for (let l = 0; l < carte.grid.length; l++) {
+        for (let c = 0; c < carte.grid[l].length; c++) {
+          let current: Tile = carte.grid[l][c];
           switch (current.type) {
             case TileType.Mur: {
               this.ctx.fillStyle = "#D74022";
-              this.ctx.fillRect(c * this.tileSize, l * this.tileSize, this.tileSize, this.tileSize); 
+              this.ctx.fillRect(c *tileSize, l * tileSize, tileSize, tileSize); 
               break;
             }
             case TileType.Depart: {
               this.ctx.fillStyle = "#00FF00";
-              this.ctx.fillRect(c * this.tileSize, l * this.tileSize, this.tileSize, this.tileSize);
+              this.ctx.fillRect(c *tileSize, l * tileSize, tileSize, tileSize);
               break;
             } 
             case TileType.Arrive: {
               this.ctx.fillStyle = "#0000FF";
-              this.ctx.fillRect(c * this.tileSize, l * this.tileSize, this.tileSize, this.tileSize);
+              this.ctx.fillRect(c * tileSize, l * tileSize, tileSize, tileSize);
               break;
             }    
             default: { 
@@ -93,13 +99,22 @@ export class CarteComponent implements OnInit {
           }
         }
       }
-      
-      //this.ctx.fillRect(25, 25, 150, 150);
 
+      // on dessine le meilleur
+      for (let i = 0; i < this.genetiqueService.population.genomes.length; i++) {
+        let best: Genome = this.genetiqueService.population.genomes[i];
+        let bestPosition: [number, number] = Evaluation.coordonneeFinale(best, carte);
+        this.ctx.fillStyle = "#FF00FF";
+        this.ctx.fillRect(bestPosition[1] *tileSize, bestPosition[0] * tileSize, tileSize, tileSize); 
+      }
 
-      //this.ctx.fillStyle = "rgba(0,0,0,0.5)";
-      //this.ctx.clearRect(60, 60, 120, 120);
-      //this.ctx.strokeRect(90, 90, 80, 80);
+      let best: Genome = this.genetiqueService.getBest();
+      let bestPosition: [number, number] = Evaluation.coordonneeFinale(best, carte);
+      this.ctx.fillStyle = "#00FFFF";
+      this.ctx.fillRect(bestPosition[1] *tileSize, bestPosition[0] * tileSize, tileSize, tileSize); 
+
+      this.drawChemin();
+
     }
   }
 
