@@ -16,10 +16,10 @@ import { Population } from "src/app/shared/genetique/population";
 })
 export class GenetiqueService {
     generation: number = 1;
-    taillePopulation: number = 100;
-    tailleGenome: number = 40;
-    tauxCroisement: number = 20;
-    tauxMutation: number = 5;
+    taillePopulation: number = 300;
+    tailleGenome: number = 80;
+    tauxCroisement: number = 70;
+    tauxMutation: number = 30;
     carte: Carte;
     population: Population;
     croisement: Croisement = new CroitementMoitie();
@@ -44,6 +44,7 @@ export class GenetiqueService {
         this.population.genomes.sort((a, b) => {
             return Evaluation.evaluate(a, this.carte) - Evaluation.evaluate(b, this.carte); 
         });
+        console.log(this.population.genomes)
         return this.population.genomes[0];
     }
 
@@ -55,13 +56,17 @@ export class GenetiqueService {
             return Evaluation.evaluate(a, this.carte) - Evaluation.evaluate(b, this.carte); 
         });
         
-        // on sauvegarde le meilleur
-        newGenomes.push(popInit[0]);
+        // on sauvegarde les 3 meilleur
+        newGenomes.push(popInit[0])
+        newGenomes.push(popInit[1])
+        newGenomes.push(popInit[2])
+        newGenomes.push(this.croisement.croiser(popInit[0], popInit[1]))
+        newGenomes.push(this.croisement.croiser(popInit[1],popInit[2]))
 
-        for (let i = 1; i < popInit.length * (20 / 100); i++) {
+        for (let i = 1; i < popInit.length * (this.tauxCroisement / 100); i++) {
             // on croise les element deux à deux
-            let p1: Genome = popInit[i];
-            let p2: Genome = popInit[i+1];
+            let p1: Genome = popInit[Math.floor(Math.random()*popInit.length)];
+            let p2: Genome = popInit[Math.floor(Math.random()*popInit.length)];
 
             newGenomes.push(this.croisement.croiser(p1, p2));
         }
@@ -70,6 +75,14 @@ export class GenetiqueService {
             newGenomes.push(this.generateRandomGenome());
         }
 
+        newGenomes = newGenomes.map(val => {    
+          if(Math.floor(Math.random()*100) <= this.tauxMutation){
+              return this.mutation.muter(val)
+          }
+          else{
+              return val
+          }
+        })
         return new Population(newGenomes);
     }
 
