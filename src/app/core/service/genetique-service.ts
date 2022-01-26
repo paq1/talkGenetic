@@ -3,6 +3,7 @@ import { Carte } from "src/app/shared/carte/carte";
 import { Tile } from "src/app/shared/carte/tile";
 import { TileType } from "src/app/shared/carte/tile-type";
 import { Croisement } from "src/app/shared/genetique/croisements/croisement";
+import { croisementAlternant } from "src/app/shared/genetique/croisements/croisement-alternance";
 import { CroitementMoitie } from "src/app/shared/genetique/croisements/croisement-moitie";
 import { Evaluation } from "src/app/shared/genetique/evaluation";
 import { Gene } from "src/app/shared/genetique/gene";
@@ -16,13 +17,13 @@ import { Population } from "src/app/shared/genetique/population";
 })
 export class GenetiqueService {
     generation: number = 1;
-    taillePopulation: number = 300;
-    tailleGenome: number = 80;
+    taillePopulation: number = 100;
+    tailleGenome: number = 40;
     tauxCroisement: number = 70;
     tauxMutation: number = 30;
     carte: Carte;
     population: Population;
-    croisement: Croisement = new CroitementMoitie();
+    croisement: Croisement = new croisementAlternant();
     mutation: Mutation = new MutationRandom();
 
     constructor() {
@@ -57,6 +58,9 @@ export class GenetiqueService {
         });
         
         // on sauvegarde les 3 meilleur
+        for(var i=0; i< 0.2 * popInit.length; i++) {
+            newGenomes.push(popInit[i]);
+        }
         newGenomes.push(popInit[0])
         newGenomes.push(popInit[1])
         newGenomes.push(popInit[2])
